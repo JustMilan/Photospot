@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "97591898537",
+    "project_id": "photospot-4a954",
+    "storage_bucket": "photospot-4a954.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:97591898537:android:a6d2ef9596b640cf63d4b8",
+        "android_client_info": {
+          "package_name": "com.example.photospot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "97591898537-1jd9ern6h4l6e7horurg9mb305p6lg2c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.photospot",
+            "certificate_hash": "6c0ba996a02c9681b6346287132f45d53be054e4"
+          }
+        },
+        {
+          "client_id": "97591898537-pg1p0u13huc44oef3srensej4drfgqbp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiFes533mjwOSsuXz00BttIImG_njxvX0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "97591898537-pg1p0u13huc44oef3srensej4drfgqbp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
