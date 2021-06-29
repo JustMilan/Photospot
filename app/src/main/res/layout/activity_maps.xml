@@ -33,7 +33,7 @@
             android:textSize="15sp" />
 
         <ImageView
-            android:id="@+id/ic_gps"
+            android:id="@+id/center_button"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_alignParentEnd="true"

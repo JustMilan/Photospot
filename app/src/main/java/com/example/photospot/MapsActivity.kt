@@ -2,16 +2,21 @@ package com.example.photospot
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.Location
+import android.location.*
 import android.os.Bundle
+import android.util.Log
+import android.widget.ImageView
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
-import com.example.photospot.utils.MapUtils.HandlePermissions
+import com.example.photospot.utils.MapUtils.checkPermissions
 import com.example.photospot.databinding.ActivityMapsBinding
-import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.*
 
 
@@ -20,25 +25,62 @@ private val GoogleMap?.MoveCamera: Unit
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
+    private var cancelationToken: CancellationTokenSource = CancellationTokenSource()
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var mMap: GoogleMap? = null
     private var binding: ActivityMapsBinding? = null
-    private val mGoogleApiClient: GoogleApiClient? = null
 
+    // widgets
+    private lateinit var centerButton: ImageView
 
-    // Create persistent LocationManager reference
-//    private val locationManager: LocationManager? = getSystemService(LOCATION_SERVICE) as LocationManager?
+    private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
-        //TODO: enable center button
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment?
         Objects.requireNonNull(mapFragment)!!.getMapAsync(this)
+
+        initializeLocation()
+
+        centerButton = findViewById(R.id.center_button)
+        centerButton.setOnClickListener { centerMap() }
+    }
+
+    private fun initializeLocation() {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    lastLocation = location
+                }
+            }
+
     }
 
     /**
@@ -54,7 +96,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         mMap = googleMap
 
         try {
-            HandlePermissions(this)
+            checkPermissions(this)
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace() // TODO: handle error
         }
@@ -82,7 +124,20 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         //TODO: Update documentation
     }
 
-    fun moveCamera(location: Location) {
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f));
+    fun moveMap(location: Location) {
+        getCurrentLocation()
+        val latLng = LatLng(location.latitude, location.longitude)
+        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
+    }
+
+    fun centerMap() {
+        getCurrentLocation()
+        moveMap(lastLocation)
+    }
+
+    fun getCurrentLocation() {
+        checkPermissions(this)
+//        Log.e("yes", fusedLocationClient.getCurrentLocation(-1, cancelationToken.token).toString())
+
     }
 }
