@@ -3,7 +3,7 @@ package com.example.photospot.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.result.ActivityResultLauncher
-import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.checkSelfPermission
 
 
 object MapUtils {
@@ -19,7 +19,7 @@ object MapUtils {
         ).requestedPermissions
 
         for (permission in permissions) {
-            if (ActivityCompat.checkSelfPermission(context, permission)
+            if (checkSelfPermission(context, permission)
                 != PackageManager.PERMISSION_GRANTED
             ) {
                 requestPermissionLauncher.launch(permission)
@@ -27,5 +27,14 @@ object MapUtils {
         }
     }
 
+    fun checkPermissionEnabled(context: Context, permission: Array<String>): Boolean {
+        permission.forEach { p ->
+            if (checkSelfPermission(context, p) == PackageManager.PERMISSION_GRANTED
+            ) {
+                return true
+            }
+        }
+        return false
+    }
 
 }

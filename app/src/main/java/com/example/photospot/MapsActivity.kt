@@ -1,5 +1,6 @@
 package com.example.photospot
 
+import android.Manifest
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
@@ -37,6 +38,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
 
@@ -44,6 +46,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment!!.getMapAsync(this)
+
         initializeLocation()
 
         centerButton = findViewById(R.id.center_button)
@@ -74,7 +77,15 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         checkPermission()
-        mMap!!.isMyLocationEnabled = true
+        when {
+            MapUtils.checkPermissionEnabled(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) -> mMap!!.isMyLocationEnabled = true
+        }
         centerMap()
     }
 
