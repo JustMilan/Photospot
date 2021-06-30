@@ -1,41 +1,39 @@
 package com.example.photospot
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.location.*
+import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
-import android.util.Log
 import android.widget.ImageView
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.FragmentActivity
-import com.example.photospot.utils.MapUtils.checkPermissions
 import com.example.photospot.databinding.ActivityMapsBinding
-import com.google.android.gms.location.*
+import com.example.photospot.utils.MapUtils
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.tasks.CancellationTokenSource
-import java.util.*
-
-
-private val GoogleMap?.MoveCamera: Unit
-    get() {}
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
-    private var cancelationToken: CancellationTokenSource = CancellationTokenSource()
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var mMap: GoogleMap? = null
-    private var binding: ActivityMapsBinding? = null
-
-    // widgets
     private lateinit var centerButton: ImageView
-
+    private var binding: ActivityMapsBinding? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
 
+    /**
+     * Register the permissions callback, which handles the user's response to the
+     * system permissions dialog. Save the return value, an instance of
+     * ActivityResultLauncher. You can use either a val, as shown in this snippet,
+     * or a lateinit var in your onAttach() or onCreate() method.
+     */
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,8 +43,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment?
-        Objects.requireNonNull(mapFragment)!!.getMapAsync(this)
-
+        mapFragment!!.getMapAsync(this)
         initializeLocation()
 
         centerButton = findViewById(R.id.center_button)
@@ -55,24 +52,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
     private fun initializeLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
+        checkPermission()
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 // Got last known location. In some rare situations this can be null.
@@ -80,7 +60,6 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
                     lastLocation = location
                 }
             }
-
     }
 
     /**
@@ -94,50 +73,46 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        try {
-            checkPermissions(this)
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace() // TODO: handle error
-        }
-
-        //TODO: remove this as it is already being called in the utils
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-
+        checkPermission()
         mMap!!.isMyLocationEnabled = true
-
-        //TODO: get current location
-
-
-        //TODO: move map
-
-
-        //TODO: Update documentation
+        centerMap()
     }
 
-    fun moveMap(location: Location) {
-        getCurrentLocation()
+    /**
+     * Moves the map to the given location.
+     */
+    private fun moveMap(location: Location) {
+        currentLocation()
         val latLng = LatLng(location.latitude, location.longitude)
-        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
+        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
     }
 
-    fun centerMap() {
-        getCurrentLocation()
+    /**
+     * Centers the map on device location.
+     */
+    private fun centerMap() {
+        currentLocation()
         moveMap(lastLocation)
     }
 
-    fun getCurrentLocation() {
-        checkPermissions(this)
-//        Log.e("yes", fusedLocationClient.getCurrentLocation(-1, cancelationToken.token).toString())
+    /**
+     * Updates the lastLocation attribute.
+     */
+    private fun currentLocation() {
+        checkPermission()
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    lastLocation = location
+                }
+            }
+    }
 
+    /**
+     * Calls the permission check and request from the Utils.
+     */
+    private fun checkPermission() {
+        MapUtils.checkPermission(this, requestPermissionLauncher)
     }
 }

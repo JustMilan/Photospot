@@ -42,7 +42,8 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="110dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/my_location" />
+            android:src="@drawable/my_location"
+            android:contentDescription="@string/center_location_description" />
 
         <Button
             android:id="@+id/sign_out_button"
