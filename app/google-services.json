@@ -22,13 +22,21 @@
           }
         },
         {
+          "client_id": "97591898537-a2cjsd0de09tofqenao79hluu424qcga.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.photospot",
+            "certificate_hash": "9c8d29437d8515d5029efe2e173b87d6ec8dedd1"
+          }
+        },
+        {
           "client_id": "97591898537-pg1p0u13huc44oef3srensej4drfgqbp.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBiFes533mjwOSsuXz00BttIImG_njxvX0"
+          "current_key": "AIzaSyAZE4HdO3wyjoBtXEuCv4fglaQfPEFjeXs"
         }
       ],
       "services": {
