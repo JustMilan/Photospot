@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Photospot</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_login">Login</string>
     <string name="sign_out">Sign out</string>
     <string name="no_photospots_near_you">No photospots near you</string>
     <string name="searchbar_hint" translatable="true">Enter Address, City or Zip Code</string>
