@@ -1,9 +1,11 @@
 package com.example.photospot.authentication
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.photospot.MapsActivity
 import com.example.photospot.R
@@ -24,6 +26,30 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var signInButton: SignInButton
 
+    private val resultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+
+                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+                task.addOnCompleteListener() {
+                    if (it.isSuccessful) {
+                        try {
+                            val account = task.getResult(ApiException::class.java)
+                            if (account != null) {
+                                firebaseAuthWithGoogle(account)
+                                updateUI(firebaseAuth.currentUser)
+                            }
+                        } catch (e: ApiException) {
+                            Toast.makeText(this, "SigninActivityFailed: 81", Toast.LENGTH_SHORT)
+                                .show()
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,8 +68,8 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions)
 
-        if (firebaseAuth.getCurrentUser() != null) {
-            val user: FirebaseUser = firebaseAuth.getCurrentUser()!!
+        if (firebaseAuth.currentUser != null) {
+            val user: FirebaseUser = firebaseAuth.currentUser!!
             updateUI(user)
         }
     }
@@ -65,25 +91,8 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun googleSignIn() {
-        val signIntent = mGoogleSignInClient.signInIntent
-        startActivityForResult(signIntent, GOOGLE_SIGN_IN)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == GOOGLE_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                if (account != null) {
-                    firebaseAuthWithGoogle(account)
-                    updateUI(firebaseAuth.currentUser)
-                }
-            } catch (e: ApiException) {
-                Toast.makeText(this, "SigninActivityFailed: 81", Toast.LENGTH_SHORT).show()
-                e.printStackTrace()
-            }
-        }
+        val intent = mGoogleSignInClient.signInIntent
+        resultLauncher.launch(intent)
     }
 
     private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
