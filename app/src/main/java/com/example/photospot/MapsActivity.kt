@@ -1,14 +1,20 @@
 package com.example.photospot
 
 import android.Manifest
+import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
+import android.widget.Button
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.FragmentActivity
+import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.databinding.ActivityMapsBinding
 import com.example.photospot.utils.MapUtils
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -16,14 +22,21 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
     private var mMap: GoogleMap? = null
     private lateinit var centerButton: ImageView
+    private lateinit var signOutButton: Button
     private var binding: ActivityMapsBinding? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
+    private lateinit var firebaseUser: FirebaseUser
+    private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var googleSignInClient: GoogleSignInClient
 
     /**
      * Register the permissions callback, which handles the user's response to the
@@ -39,8 +52,14 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (!isSignedIn()) run {
+            goToLoginScreen()
+        }
+
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
+
+        firebaseUser = intent.getParcelableExtra("Account")!!
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -51,6 +70,18 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
         centerButton = findViewById(R.id.center_button)
         centerButton.setOnClickListener { centerMap() }
+        signOutButton = findViewById(R.id.sign_out_button)
+        signOutButton.setOnClickListener { signOut() }
+
+        // Begin Google Sign In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+
+        firebaseAuth = FirebaseAuth.getInstance()
+
+        //  Build a GoogleSignInClient with the options specified by gso.
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
     private fun initializeLocation() {
@@ -125,5 +156,20 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      */
     private fun checkPermission() {
         MapUtils.checkPermission(this, requestPermissionLauncher)
+    }
+
+    private fun signOut() {
+        firebaseAuth.signOut()
+        googleSignInClient.signOut()
+        goToLoginScreen()
+    }
+
+    private fun isSignedIn(): Boolean {
+        return GoogleSignIn.getLastSignedInAccount(this) != null
+    }
+
+    private fun goToLoginScreen() {
+        val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
     }
 }
