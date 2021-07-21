@@ -1,20 +1,31 @@
 package com.example.photospot
 
 import android.Manifest
+import android.accessibilityservice.AccessibilityService
+import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
+import android.view.MotionEvent
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.RecyclerView
 import com.example.photospot.authentication.LoginActivity
+import com.example.photospot.autocomplete.AutocompleteAdapter
 import com.example.photospot.databinding.ActivityMapsBinding
 import com.example.photospot.utils.MapUtils
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -22,24 +33,34 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
+    private val autocompleteListCounter = 4
+
     private var mMap: GoogleMap? = null
-    private lateinit var centerButton: ImageView
-    private lateinit var signOutButton: Button
     private var binding: ActivityMapsBinding? = null
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
-    private lateinit var firebaseUser: FirebaseUser
+
+    private lateinit var searchbar: EditText
+    private lateinit var signOutButton: Button
+    private lateinit var centerButton: ImageView
+    private lateinit var placesClient: PlacesClient
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firebaseUser: FirebaseUser
+    private lateinit var autocompleteList: RecyclerView
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     /**
-     * Register the permissions callback, which handles the user's response to the
+     * Registers the permissions callback, which handles the user's response to the
      * system permissions dialog. Save the return value, an instance of
      * ActivityResultLauncher. You can use either a val, as shown in this snippet,
      * or a lateinit var in your onAttach() or onCreate() method.
@@ -66,12 +87,23 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment!!.getMapAsync(this)
 
+        // Initialize places SDK
+        Places.initialize(applicationContext, "AIzaSyAZE4HdO3wyjoBtXEuCv4fglaQfPEFjeXs")
+        placesClient = Places.createClient(this)
+
         initializeLocation()
 
         centerButton = findViewById(R.id.center_button)
         centerButton.setOnClickListener { centerMap() }
         signOutButton = findViewById(R.id.sign_out_button)
         signOutButton.setOnClickListener { signOut() }
+        searchbar = findViewById(R.id.input_search)
+        searchbar.setOnFocusChangeListener { _, hasFocus -> handleSearchbarFocus(hasFocus) }
+        searchbar.addTextChangedListener { search() }
+        autocompleteList = findViewById(R.id.autocomplete_list)
+        autocompleteList.adapter = AutocompleteAdapter(listOf())
+        autocompleteList.visibility = View.GONE
+
 
         // Begin Google Sign In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -80,20 +112,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
         firebaseAuth = FirebaseAuth.getInstance()
 
-        //  Build a GoogleSignInClient with the options specified by gso.
+        // Build a GoogleSignInClient with the options specified by gso.
         googleSignInClient = GoogleSignIn.getClient(this, gso)
-    }
-
-    private fun initializeLocation() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        checkPermission()
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location: Location? ->
-                // Got last known location. In some rare situations this can be null.
-                if (location != null) {
-                    lastLocation = location
-                }
-            }
     }
 
     /**
@@ -118,6 +138,22 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
             ) -> mMap!!.isMyLocationEnabled = true
         }
         centerMap()
+    }
+
+    /**
+     * Creates the fusedLocationClient, checks the permissions and requests them if nessecary
+     * Than finds the last location (often the current location)
+     */
+    private fun initializeLocation() {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        checkPermission()
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    lastLocation = location
+                }
+            }
     }
 
     /**
@@ -158,18 +194,87 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         MapUtils.checkPermission(this, requestPermissionLauncher)
     }
 
+    /**
+     * Signs out the user from firebase and googleSignIn and redirects the user to the login screen
+     */
     private fun signOut() {
         firebaseAuth.signOut()
         googleSignInClient.signOut()
         goToLoginScreen()
     }
 
+    /**
+     * Checks if there is a currently signed in user
+     */
     private fun isSignedIn(): Boolean {
         return GoogleSignIn.getLastSignedInAccount(this) != null
     }
 
+    /**
+     * Sends the user to the loginScreen
+     */
     private fun goToLoginScreen() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
+    }
+
+    /**
+     * Performs a google places autocomplete api call with the contents of the edittext
+     * Fills the recyclerview with the results afterwards
+     */
+    private fun search() {
+        val token = AutocompleteSessionToken.newInstance()
+        val request = MapUtils.autocompleteRequestBuilder(token, searchbar.text.toString())
+
+        placesClient.findAutocompletePredictions(request)
+            .addOnSuccessListener { response: FindAutocompletePredictionsResponse ->
+                val dataset: MutableList<List<String>> = emptyList<List<String>>().toMutableList()
+                for ((counter, prediction) in response.autocompletePredictions.withIndex()) {
+                    if (counter == autocompleteListCounter) break
+                    dataset.add(
+                        listOf(
+                            prediction.getPrimaryText(null).toString(),
+                            prediction.getSecondaryText(null).toString()
+                        )
+                    )
+                }
+                autocompleteList.adapter = AutocompleteAdapter(dataSet = dataset)
+            }.addOnFailureListener { exception: Exception? ->
+                if (exception is ApiException) {
+                    Log.e("autocomplete", "Place not found: " + exception.statusCode)
+                }
+            }
+    }
+
+    /**
+     * Hides autocomplete recyclerview if the searchbar isn't in focus
+     */
+    private fun handleSearchbarFocus(hasFocus: Boolean) {
+        if (hasFocus) {
+            autocompleteList.visibility = View.VISIBLE
+            search()
+        } else {
+            autocompleteList.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Dispatches a touch event on a screen touch
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        clearFocusOnOutsideClick()
+        return super.dispatchTouchEvent(ev)
+    }
+
+    /**
+     * Clear focus on outside click
+     */
+    private fun clearFocusOnOutsideClick() {
+        currentFocus?.apply {
+            if (this is EditText) clearFocus()
+            // Hide keyboard
+            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                .hideSoftInputFromWindow(windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+        }
     }
 }
