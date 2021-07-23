@@ -63,10 +63,11 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/autocomplete_list"
             android:layout_width="200dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignTop="@+id/input_search"
             android:layout_marginStart="10dp"
             android:layout_marginTop="42dp"
+            android:background="@color/searchBarWhite"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:itemCount="4"
             tools:listitem="@layout/autocomplete_list_item" />
