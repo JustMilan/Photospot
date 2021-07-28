@@ -92,18 +92,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         placesClient = Places.createClient(this)
 
         initializeLocation()
-
-        centerButton = findViewById(R.id.center_button)
-        centerButton.setOnClickListener { centerMap() }
-        signOutButton = findViewById(R.id.sign_out_button)
-        signOutButton.setOnClickListener { signOut() }
-        searchbar = findViewById(R.id.input_search)
-        searchbar.setOnFocusChangeListener { _, hasFocus -> handleSearchbarFocus(hasFocus) }
-        searchbar.addTextChangedListener { search() }
-        autocompleteList = findViewById(R.id.autocomplete_list)
-        autocompleteList.adapter = AutocompleteAdapter(listOf())
-        autocompleteList.visibility = View.GONE
-
+        setWidgets()
 
         // Begin Google Sign In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -138,6 +127,22 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
             ) -> mMap!!.isMyLocationEnabled = true
         }
         centerMap()
+    }
+
+    /**
+     * Sets all the widgets in the MapsActivity
+     */
+    private fun setWidgets() {
+        centerButton = findViewById(R.id.center_button)
+        centerButton.setOnClickListener { centerMap() }
+        signOutButton = findViewById(R.id.sign_out_button)
+        signOutButton.setOnClickListener { signOut() }
+        searchbar = findViewById(R.id.input_search)
+        searchbar.setOnFocusChangeListener { _, hasFocus -> handleSearchbarFocus(hasFocus) }
+        searchbar.addTextChangedListener { search() }
+        autocompleteList = findViewById(R.id.autocomplete_list)
+        autocompleteList.adapter = AutocompleteAdapter(listOf())
+        autocompleteList.visibility = View.GONE
     }
 
     /**
@@ -238,7 +243,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
                         )
                     )
                 }
-                autocompleteList.adapter = AutocompleteAdapter(dataSet = dataset)
+                autocompleteList.adapter = AutocompleteAdapter(dataset)
             }.addOnFailureListener { exception: Exception? ->
                 if (exception is ApiException) {
                     Log.e("autocomplete", "Place not found: " + exception.statusCode)
