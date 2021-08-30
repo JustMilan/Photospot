@@ -1,25 +1,21 @@
 package com.example.photospot
 
 import android.Manifest
-import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
-import androidx.recyclerview.widget.RecyclerView
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.autocomplete.AutocompleteAdapter
+import com.example.photospot.autocomplete.AutocompleteItemData
 import com.example.photospot.databinding.ActivityMapsBinding
 import com.example.photospot.utils.MapUtils
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -35,6 +31,8 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.FirebaseAuth
@@ -55,9 +53,15 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var placesClient: PlacesClient
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseUser: FirebaseUser
-    private lateinit var autocompleteList: RecyclerView
+    private lateinit var clearSearchbarButton: Button
+
+    // private lateinit var autocompleteList: RecyclerView
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    // autocomplete
+    private lateinit var autocompleteListView: ListView
+    private var autocompleteList: ArrayList<AutocompleteItemData> = ArrayList()
 
     /**
      * Registers the permissions callback, which handles the user's response to the
@@ -140,9 +144,16 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         searchbar = findViewById(R.id.input_search)
         searchbar.setOnFocusChangeListener { _, hasFocus -> handleSearchbarFocus(hasFocus) }
         searchbar.addTextChangedListener { search() }
-        autocompleteList = findViewById(R.id.autocomplete_list)
-        autocompleteList.adapter = AutocompleteAdapter(listOf())
-        autocompleteList.visibility = View.GONE
+        clearSearchbarButton = findViewById(R.id.clear_searchbar)
+        clearSearchbarButton.setOnClickListener { clearSearchbar() }
+
+
+        autocompleteListView = findViewById(R.id.autocomplete_list)
+        autocompleteListView.adapter = AutocompleteAdapter(this, autocompleteList)
+        autocompleteListView.visibility = View.GONE
+        autocompleteListView.setOnItemClickListener { parent, view, position, id ->
+            onAutocompleteClick(parent, view, position, id)
+        }
     }
 
     /**
@@ -166,7 +177,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      */
     private fun moveMap(location: Location) {
         currentLocation()
-        val latLng = LatLng(location.latitude, location.longitude)
+        moveMap(LatLng(location.latitude, location.longitude))
+    }
+
+    /**
+     * Moves map based on the given LatLng coordinates
+     */
+    private fun moveMap(latLng: LatLng) {
         mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
     }
 
@@ -175,7 +192,11 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      */
     private fun centerMap() {
         currentLocation()
-        moveMap(lastLocation)
+        if (lastLocation.latitude == 0.0 && lastLocation.longitude == 0.0) {
+            moveMap(LatLng(52.373169, 4.890660))
+        } else {
+            moveMap(lastLocation)
+        }
     }
 
     /**
@@ -239,11 +260,19 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
                     dataset.add(
                         listOf(
                             prediction.getPrimaryText(null).toString(),
-                            prediction.getSecondaryText(null).toString()
+                            prediction.getSecondaryText(null).toString(),
+                            prediction.placeId
                         )
                     )
                 }
-                autocompleteList.adapter = AutocompleteAdapter(dataset)
+
+                val autocompleteItems: ArrayList<AutocompleteItemData> = ArrayList()
+                dataset.forEach { list ->
+                    autocompleteItems.add(
+                        AutocompleteItemData(list[0], list[1], list[2])
+                    )
+                }
+                autocompleteListView.adapter = AutocompleteAdapter(this, autocompleteItems)
             }.addOnFailureListener { exception: Exception? ->
                 if (exception is ApiException) {
                     Log.e("autocomplete", "Place not found: " + exception.statusCode)
@@ -252,34 +281,63 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     /**
-     * Hides autocomplete recyclerview if the searchbar isn't in focus
+     * Hides autocomplete list if the searchbar isn't in focus
      */
     private fun handleSearchbarFocus(hasFocus: Boolean) {
         if (hasFocus) {
-            autocompleteList.visibility = View.VISIBLE
+            autocompleteListView.visibility = View.VISIBLE
             search()
         } else {
-            autocompleteList.visibility = View.GONE
+            autocompleteListView.visibility = View.GONE
         }
     }
 
     /**
-     * Dispatches a touch event on a screen touch
+     * onClickListener for autocomplete list
+     * Extracts the info from the autocomplete item and tries to find the corresponding location,
+     * moves the map towards it and hides the keyboard and autocompleteList.
      */
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        clearFocusOnOutsideClick()
-        return super.dispatchTouchEvent(ev)
+    private fun onAutocompleteClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+        val placeId =
+            (autocompleteListView.adapter.getItem(position) as AutocompleteItemData).placeId
+        val placeRequest =
+            FetchPlaceRequest.newInstance(placeId, listOf(Place.Field.ADDRESS, Place.Field.LAT_LNG))
+        val location = placesClient.fetchPlace(placeRequest)
+        location.addOnSuccessListener {
+            when {
+                it.place.latLng != null -> {
+                    moveMap(it.place.latLng!!)
+                }
+                it.place.address != null -> {
+                    moveMap(Location(it.place.address))
+                }
+                else -> {
+                    Toast.makeText(
+                        this,
+                        "Couldn't find address or coordinates, please contact us",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
+        hideAutocompleteList()
     }
 
     /**
      * Clear focus on outside click
      */
-    private fun clearFocusOnOutsideClick() {
+    private fun hideAutocompleteList() {
+        autocompleteListView.visibility = View.GONE
         currentFocus?.apply {
-            if (this is EditText) clearFocus()
             // Hide keyboard
             (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
                 .hideSoftInputFromWindow(windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+            if (this is EditText) clearFocus()
         }
+    }
+
+    private fun clearSearchbar() {
+        searchbar.text.clear()
     }
 }
