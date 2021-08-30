@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <fragment xmlns:tools="http://schemas.android.com/tools"
+    <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
@@ -13,49 +14,78 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp">
+        android:layout_height="wrap_content">
 
-        <EditText
-            android:id="@+id/input_search"
+        <FrameLayout
+            android:id="@id/input_search_wrapper"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_centerVertical="true"
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
-            android:layout_marginEnd="150dp"
-            android:background="@drawable/search_bar"
-            android:hint="@string/searchbar_hint"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:padding="10dp"
-            android:textColor="#000"
-            android:textCursorDrawable="@null"
-            android:textSize="15sp" />
+            android:layout_marginEnd="150dp">
+
+            <EditText
+                android:id="@+id/input_search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/search_bar"
+                android:hint="@string/searchbar_hint"
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:padding="10dp"
+                android:textColor="#000"
+                android:textCursorDrawable="@null"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/clear_searchbar"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/clear_text"
+                android:scaleType="centerInside" />
+
+        </FrameLayout>
 
         <ImageView
             android:id="@+id/center_button"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_centerVertical="false"
+            android:layout_marginTop="15dp"
             android:layout_marginEnd="110dp"
+            android:contentDescription="@string/center_location_description"
             android:scaleType="centerCrop"
-            android:src="@drawable/my_location"
-            android:contentDescription="@string/center_location_description" />
+            android:src="@drawable/my_location" />
 
         <Button
             android:id="@+id/sign_out_button"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
+            android:layout_centerVertical="false"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/purple_pink_gradient_animation"
             android:text="@string/sign_out"
             android:textColor="#fff" />
+
+        <ListView
+            android:id="@+id/autocomplete_list"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/input_search_wrapper"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="42dp"
+            android:background="@color/searchBarWhite"
+            tools:itemCount="4"
+            tools:listitem="@layout/autocomplete_list_item" />
 
     </RelativeLayout>
 
@@ -75,8 +105,8 @@
             android:layout_marginStart="120dp"
             android:layout_marginTop="15dp"
             android:layout_marginEnd="120dp"
+            android:contentDescription="@string/empty"
             android:src="@drawable/bottom_sheet_drag_line"
-
             android:textAlignment="center"
             android:textColor="#000" />
 

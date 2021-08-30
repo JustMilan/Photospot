@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat.checkSelfPermission
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 
 
 object MapUtils {
@@ -37,4 +39,13 @@ object MapUtils {
         return false
     }
 
+    fun autocompleteRequestBuilder(
+        token: AutocompleteSessionToken,
+        query: String
+    ): FindAutocompletePredictionsRequest {
+        return FindAutocompletePredictionsRequest.builder()
+            .setSessionToken(token)
+            .setQuery(query)
+            .build()
+    }
 }
