@@ -9,7 +9,12 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
@@ -40,11 +45,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.io.Serializable
 
-
 class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
-
-    private val autocompleteListCounter = 4
-
     private var mMap: GoogleMap? = null
     private var binding: ActivityMapsBinding? = null
     private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
@@ -186,7 +187,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
      * Moves map based on the given LatLng coordinates
      */
     private fun moveMap(latLng: LatLng) {
-        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, defaultZoom))
     }
 
     /**
@@ -195,7 +196,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
     private fun centerMap() {
         currentLocation()
         if (lastLocation.latitude == 0.0 && lastLocation.longitude == 0.0) {
-            moveMap(LatLng(52.373169, 4.890660))
+            moveMap(LatLng(defaultLatitude, defaultLongitude))
         } else {
             moveMap(lastLocation)
         }
@@ -330,12 +331,25 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
         }
     }
 
+    /**
+     * Clears the text in the searchbar
+     */
     private fun clearSearchbar() {
         searchbar.text.clear()
     }
 
+    /**
+     * Starts the account activity
+     */
     private fun showAccount() {
         val intent = Intent(this, AccountActivity::class.java)
         startActivity(intent)
+    }
+
+    companion object Constants {
+        private const val defaultZoom = 15f
+        private const val autocompleteListCounter = 4
+        private const val defaultLongitude = 4.890660
+        private const val defaultLatitude = 52.373169
     }
 }
