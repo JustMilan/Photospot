@@ -13,6 +13,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
+import com.example.photospot.account.AccountActivity
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.autocomplete.AutocompleteAdapter
 import com.example.photospot.autocomplete.AutocompleteItemData
@@ -37,9 +38,10 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.io.Serializable
 
 
-class MapsActivity : FragmentActivity(), OnMapReadyCallback {
+class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
 
     private val autocompleteListCounter = 4
 
@@ -48,8 +50,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
 
     private lateinit var searchbar: EditText
-    private lateinit var signOutButton: Button
     private lateinit var centerButton: ImageView
+    private lateinit var accountButton: ImageView
     private lateinit var placesClient: PlacesClient
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseUser: FirebaseUser
@@ -139,8 +141,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private fun setWidgets() {
         centerButton = findViewById(R.id.center_button)
         centerButton.setOnClickListener { centerMap() }
-        signOutButton = findViewById(R.id.sign_out_button)
-        signOutButton.setOnClickListener { signOut() }
+        accountButton = findViewById(R.id.account_button)
+        accountButton.setOnClickListener { showAccount() }
         searchbar = findViewById(R.id.input_search)
         searchbar.setOnFocusChangeListener { _, hasFocus -> handleSearchbarFocus(hasFocus) }
         searchbar.addTextChangedListener { search() }
@@ -218,15 +220,6 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      */
     private fun checkPermission() {
         MapUtils.checkPermission(this, requestPermissionLauncher)
-    }
-
-    /**
-     * Signs out the user from firebase and googleSignIn and redirects the user to the login screen
-     */
-    private fun signOut() {
-        firebaseAuth.signOut()
-        googleSignInClient.signOut()
-        goToLoginScreen()
     }
 
     /**
@@ -339,5 +332,10 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
     private fun clearSearchbar() {
         searchbar.text.clear()
+    }
+
+    private fun showAccount() {
+        val intent = Intent(this, AccountActivity::class.java)
+        startActivity(intent)
     }
 }
