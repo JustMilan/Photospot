@@ -48,7 +48,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.login)
 
         signInButton = findViewById(R.id.sign_in_button)
         findViewById<SignInButton>(R.id.sign_in_button).setOnClickListener(this)
@@ -68,6 +68,8 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         GoogleSignInClientWrapper(mGoogleSignInClient)
 
         if (AuthenticationHolder.firebaseUser != null) updateUI()
+        if (GoogleSignIn.getLastSignedInAccount(this) != null)
+            firebaseAuthWithGoogle(GoogleSignIn.getLastSignedInAccount(this)!!)
     }
 
     /**
