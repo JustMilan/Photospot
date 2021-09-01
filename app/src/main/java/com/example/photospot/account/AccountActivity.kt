@@ -4,23 +4,19 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.example.photospot.MapsActivity
 import com.example.photospot.R
 import com.example.photospot.authentication.AuthenticationHolder
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.databinding.ActivityAccountBinding
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import java.io.Serializable
 
 class AccountActivity : AppCompatActivity(), Serializable {
     private var binding: ActivityAccountBinding? = null
-    private lateinit var firebaseUser: FirebaseUser
-    private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var googleSignInClient: GoogleSignInClient
 
     private lateinit var profilePicture: View
     private lateinit var signOutButton: Button
@@ -48,7 +44,12 @@ class AccountActivity : AppCompatActivity(), Serializable {
         backToMapButton.setOnClickListener { toMapsActivity() }
 
         profilePicture = findViewById(R.id.profile_picture)
-//        profilePicture = firebaseUser.photoUrl
+        Glide
+            .with(profilePicture)
+            .load(AuthenticationHolder.googleSignInAccount?.photoUrl)
+            .centerCrop()
+            .placeholder(R.drawable.account_white)
+            .into(profilePicture as ImageView)
 
         emailTextView = findViewById(R.id.email_holder)
         emailTextView.text = AuthenticationHolder.firebaseUser?.email
@@ -68,8 +69,5 @@ class AccountActivity : AppCompatActivity(), Serializable {
     /**
      * Changes activity to maps Activity
      */
-    private fun toMapsActivity() {
-        //now how to navigate to new fragment
-        onBackPressed()
-    }
+    private fun toMapsActivity() = onBackPressed()
 }

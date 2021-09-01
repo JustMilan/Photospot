@@ -30,9 +30,7 @@ class AutocompleteAdapter(
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        var convertView1 = convertView
-
-        convertView1 =
+        val convertView1 =
             LayoutInflater.from(context).inflate(R.layout.autocomplete_list_item, parent, false)
 
         primaryText = convertView1!!.findViewById(R.id.primaryText)

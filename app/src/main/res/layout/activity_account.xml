@@ -52,14 +52,14 @@
             android:id="@+id/email_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
+            android:textSize="30sp"
             app:layout_constraintTop_toBottomOf="@id/profile_picture" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="5dp"
             android:background="@color/searchBarGrey"
-            app:layout_constraintTop_toBottomOf="@id/profile_picture" />
+            app:layout_constraintTop_toBottomOf="@id/email_holder" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

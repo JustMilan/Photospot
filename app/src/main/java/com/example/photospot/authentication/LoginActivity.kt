@@ -101,6 +101,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) AuthenticationHolder.firebaseUser = task.result.user
             }.continueWith {
+                AuthenticationHolder.googleSignInAccount = account
                 loadingProgressBar.visibility = View.VISIBLE
                 updateUI()
             }
