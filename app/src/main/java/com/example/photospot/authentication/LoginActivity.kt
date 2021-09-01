@@ -23,6 +23,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var signInButton: SignInButton
+    private lateinit var googleAccount: GoogleSignInAccount
 
     private val resultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -34,6 +35,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                     if (it.isSuccessful) {
                         try {
                             val account = task.getResult(ApiException::class.java)
+                            googleAccount = account
                             if (account != null) firebaseAuthWithGoogle(account)
                         } catch (e: ApiException) {
                             Toast.makeText(this, "SigninActivityFailed: 81", Toast.LENGTH_SHORT)
@@ -50,7 +52,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.login)
 
         // Build a GoogleSignInClient with the options specified by gso.
-        signInButton = findViewById<SignInButton>(R.id.sign_in_button)
+        signInButton = findViewById(R.id.sign_in_button)
         findViewById<SignInButton>(R.id.sign_in_button).setOnClickListener(this)
 
         firebaseAuth = FirebaseAuth.getInstance()
@@ -62,9 +64,13 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions)
 
-        if (firebaseAuth.currentUser != null) {
-            val user: FirebaseUser = firebaseAuth.currentUser!!
-            updateUI(user)
+//        if (firebaseAuth.currentUser != null) {
+//            val user: FirebaseUser = firebaseAuth.currentUser!!
+//            updateUI(user)
+//        }
+
+        if (AuthenticationHolder.firebaseUser != null) {
+            updateUI()
         }
     }
 
@@ -73,11 +79,19 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         signInButton.setSize(SignInButton.SIZE_STANDARD)
     }
 
-    private fun updateUI(account: FirebaseUser?) {
-        if (account != null) {
-            val intent = Intent(this, MapsActivity::class.java).apply {
-                putExtra("Account", account)
-            }
+//    private fun updateUI(account: FirebaseUser?) {
+//        if (account != null) {
+//            val intent = Intent(this, MapsActivity::class.java).apply {
+//                putExtra("Account", account)
+//            }
+//            startActivity(intent)
+//        }
+//    }
+
+    private fun updateUI() {
+        if (AuthenticationHolder.firebaseUser != null) {
+            val intent = Intent(this, MapsActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
             startActivity(intent)
         }
     }
@@ -87,15 +101,20 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         resultLauncher.launch(intent)
     }
 
-    private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
-        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+//    private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
+//        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+//
+//        firebaseAuth.signInWithCredential(credential)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    updateUI(task.result.user)
+//                }
+//            }
+//    }
 
-        firebaseAuth.signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    updateUI(task.result.user)
-                }
-            }
+    private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
+        AuthenticationHolder.firebaseAuthWithGoogle(account)
+        updateUI()
     }
 
     override fun onClick(v: View) {

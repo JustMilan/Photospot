@@ -1,14 +1,13 @@
 package com.example.photospot.account
 
 import android.content.Intent
-import android.media.Image
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.example.photospot.MapsActivity
 import com.example.photospot.R
+import com.example.photospot.authentication.AuthenticationHolder
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.databinding.ActivityAccountBinding
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -25,7 +24,6 @@ class AccountActivity : AppCompatActivity(), Serializable {
     private lateinit var profilePicture: View
     private lateinit var signOutButton: Button
     private lateinit var backToMapButton: Button
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,18 +53,18 @@ class AccountActivity : AppCompatActivity(), Serializable {
      * Signs out the user from firebase and googleSignIn and redirects the user to the login screen
      */
     private fun signOut() {
-        //TODO: Fix logout
-//        firebaseAuth.signOut()
-//        googleSignInClient.signOut()
+        AuthenticationHolder.signOut()
+        MapsActivity.apply { finish() }
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
+        finish()
     }
 
     /**
      * Changes activity to maps Activity
      */
     private fun toMapsActivity() {
-        intent = Intent(this, MapsActivity::class.java)
-        startActivity(intent)
+        //now how to navigate to new fragment
+        onBackPressed()
     }
 }

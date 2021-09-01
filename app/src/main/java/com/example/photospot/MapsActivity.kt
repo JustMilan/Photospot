@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
 import com.example.photospot.account.AccountActivity
+import com.example.photospot.authentication.AuthenticationHolder
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.autocomplete.AutocompleteAdapter
 import com.example.photospot.autocomplete.AutocompleteItemData
@@ -87,7 +88,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
 
-        firebaseUser = intent.getParcelableExtra("Account")!!
+        firebaseUser = AuthenticationHolder.firebaseUser!!
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -95,7 +96,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
         mapFragment!!.getMapAsync(this)
 
         // Initialize places SDK
-        Places.initialize(applicationContext, "AIzaSyAZE4HdO3wyjoBtXEuCv4fglaQfPEFjeXs")
+        Places.initialize(applicationContext, getString(R.string.google_maps_key))
         placesClient = Places.createClient(this)
 
         initializeLocation()
@@ -346,10 +347,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
         startActivity(intent)
     }
 
+    /**
+     * Constants
+     */
     companion object Constants {
         private const val defaultZoom = 15f
-        private const val autocompleteListCounter = 4
-        private const val defaultLongitude = 4.890660
         private const val defaultLatitude = 52.373169
+        private const val defaultLongitude = 4.890660
+        private const val autocompleteListCounter = 4
     }
 }
