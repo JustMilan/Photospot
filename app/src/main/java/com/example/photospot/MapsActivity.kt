@@ -9,12 +9,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.AdapterView
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.ListView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
@@ -42,7 +37,6 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.io.Serializable
 
@@ -55,7 +49,6 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
     private lateinit var centerButton: ImageView
     private lateinit var accountButton: ImageView
     private lateinit var placesClient: PlacesClient
-    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseUser: FirebaseUser
     private lateinit var clearSearchbarButton: Button
 
@@ -107,8 +100,6 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
             .requestEmail()
             .build()
 
-        firebaseAuth = FirebaseAuth.getInstance()
-
         // Build a GoogleSignInClient with the options specified by gso.
         googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
@@ -155,13 +146,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
         autocompleteListView = findViewById(R.id.autocomplete_list)
         autocompleteListView.adapter = AutocompleteAdapter(this, autocompleteList)
         autocompleteListView.visibility = View.GONE
-        autocompleteListView.setOnItemClickListener { parent, view, position, id ->
-            onAutocompleteClick(parent, view, position, id)
+        autocompleteListView.setOnItemClickListener { _, _, position, _ ->
+            onAutocompleteClick(position)
         }
     }
 
     /**
-     * Creates the fusedLocationClient, checks the permissions and requests them if nessecary
+     * Creates the fusedLocationClient, checks the permissions and requests them if necessary
      * Than finds the last location (often the current location)
      */
     private fun initializeLocation() {
@@ -292,7 +283,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
      * Extracts the info from the autocomplete item and tries to find the corresponding location,
      * moves the map towards it and hides the keyboard and autocompleteList.
      */
-    private fun onAutocompleteClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+    private fun onAutocompleteClick(position: Int) {
         val placeId =
             (autocompleteListView.adapter.getItem(position) as AutocompleteItemData).placeId
         val placeRequest =

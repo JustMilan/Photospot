@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.photospot.MapsActivity
 import com.example.photospot.R
@@ -23,6 +24,7 @@ class AccountActivity : AppCompatActivity(), Serializable {
 
     private lateinit var profilePicture: View
     private lateinit var signOutButton: Button
+    private lateinit var emailTextView: TextView
     private lateinit var backToMapButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +49,9 @@ class AccountActivity : AppCompatActivity(), Serializable {
 
         profilePicture = findViewById(R.id.profile_picture)
 //        profilePicture = firebaseUser.photoUrl
+
+        emailTextView = findViewById(R.id.email_holder)
+        emailTextView.text = AuthenticationHolder.firebaseUser?.email
     }
 
     /**
