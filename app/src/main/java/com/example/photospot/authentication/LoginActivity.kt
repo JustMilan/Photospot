@@ -18,6 +18,7 @@ import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.ktx.Firebase
 
 class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var firebaseAuth: FirebaseAuth
@@ -67,7 +68,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
         GoogleSignInClientWrapper(mGoogleSignInClient)
 
-        if (AuthenticationHolder.firebaseUser != null) updateUI()
+        if (FirebaseAuth.getInstance().currentUser != null) updateUI()
         if (GoogleSignIn.getLastSignedInAccount(this) != null)
             firebaseAuthWithGoogle(GoogleSignIn.getLastSignedInAccount(this)!!)
     }
@@ -78,14 +79,16 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     override fun onStart() {
         super.onStart()
         signInButton.setSize(SignInButton.SIZE_STANDARD)
+        if (loadingProgressBar.visibility != View.GONE) loadingProgressBar.visibility = View.GONE
     }
 
     /**
      * Start the MapsActivity if the sign in has been successful
      */
     private fun updateUI() {
-        if (AuthenticationHolder.firebaseUser != null)
+        if (FirebaseAuth.getInstance().currentUser != null)
             startActivity(Intent(this, MapsActivity::class.java))
+        finish()
     }
 
     private fun googleSignIn() = resultLauncher.launch(mGoogleSignInClient.signInIntent)
@@ -99,7 +102,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
         FirebaseAuth.getInstance().signInWithCredential(credential)
             .addOnCompleteListener { task ->
-                if (task.isSuccessful) AuthenticationHolder.firebaseUser = task.result.user
+                if (task.isSuccessful) task.result.user?.let {
+                    FirebaseAuth.getInstance().updateCurrentUser(it)
+                }
             }.continueWith {
                 AuthenticationHolder.googleSignInAccount = account
                 loadingProgressBar.visibility = View.VISIBLE

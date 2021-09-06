@@ -14,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
 import com.example.photospot.account.AccountActivity
-import com.example.photospot.authentication.AuthenticationHolder
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.autocomplete.AutocompleteAdapter
 import com.example.photospot.autocomplete.AutocompleteItemData
@@ -37,6 +36,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.io.Serializable
 
@@ -81,7 +81,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
 
-        firebaseUser = AuthenticationHolder.firebaseUser!!
+        firebaseUser = FirebaseAuth.getInstance().currentUser!!
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -219,7 +219,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
      * Checks if there is a currently signed in user
      */
     private fun isSignedIn(): Boolean {
-        return GoogleSignIn.getLastSignedInAccount(this) != null
+        return GoogleSignIn.getLastSignedInAccount(this) != null || FirebaseAuth.getInstance().currentUser != null
     }
 
     /**
