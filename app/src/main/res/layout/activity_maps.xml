@@ -22,7 +22,7 @@
             android:layout_height="40dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
-            android:layout_marginEnd="150dp">
+            android:layout_marginEnd="100dp">
 
             <EditText
                 android:id="@+id/input_search"
@@ -58,23 +58,24 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="false"
             android:layout_marginTop="15dp"
-            android:layout_marginEnd="110dp"
+            android:layout_marginEnd="61dp"
             android:contentDescription="@string/center_location_description"
             android:scaleType="centerCrop"
             android:src="@drawable/my_location" />
 
-        <Button
-            android:id="@+id/sign_out_button"
-            android:layout_width="wrap_content"
+        <ImageView
+            android:id="@+id/account_button"
+            android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="false"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@drawable/purple_pink_gradient_animation"
-            android:text="@string/sign_out"
-            android:textColor="#fff" />
+            android:backgroundTint="@color/colorPrimaryDark"
+            android:src="@drawable/account_purple"
+            android:textColor="#fff"
+            android:contentDescription="@string/go_to_account_settings" />
 
         <ListView
             android:id="@+id/autocomplete_list"

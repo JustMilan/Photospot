@@ -2,10 +2,15 @@
     <string name="app_name">Photospot</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_login">Login</string>
+    <string name="title_activity_account">Account</string>
+
     <string name="sign_out">Sign out</string>
     <string name="no_photospots_near_you">No photospots near you</string>
     <string name="searchbar_hint" translatable="true">Tap to search</string>
     <string name="center_location_description">Center on device button</string>
     <string name="empty" />
     <string name="no_data_found">No data found</string>
+    <string name="account_picture">Account picture</string>
+    <string name="back_to_map">Back to map</string>
+    <string name="go_to_account_settings">Go to account / settings</string>
 </resources>

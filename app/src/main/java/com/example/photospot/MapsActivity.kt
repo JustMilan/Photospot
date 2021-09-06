@@ -13,6 +13,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
+import com.example.photospot.account.AccountActivity
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.autocomplete.AutocompleteAdapter
 import com.example.photospot.autocomplete.AutocompleteItemData
@@ -37,21 +38,17 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.io.Serializable
 
-
-class MapsActivity : FragmentActivity(), OnMapReadyCallback {
-
-    private val autocompleteListCounter = 4
-
+class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
     private var mMap: GoogleMap? = null
     private var binding: ActivityMapsBinding? = null
     private var lastLocation: Location = Location(LocationManager.NETWORK_PROVIDER)
 
     private lateinit var searchbar: EditText
-    private lateinit var signOutButton: Button
     private lateinit var centerButton: ImageView
+    private lateinit var accountButton: ImageView
     private lateinit var placesClient: PlacesClient
-    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseUser: FirebaseUser
     private lateinit var clearSearchbarButton: Button
 
@@ -84,7 +81,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
 
-        firebaseUser = intent.getParcelableExtra("Account")!!
+        firebaseUser = FirebaseAuth.getInstance().currentUser!!
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -92,7 +89,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         mapFragment!!.getMapAsync(this)
 
         // Initialize places SDK
-        Places.initialize(applicationContext, "AIzaSyAZE4HdO3wyjoBtXEuCv4fglaQfPEFjeXs")
+        Places.initialize(applicationContext, getString(R.string.google_maps_key))
         placesClient = Places.createClient(this)
 
         initializeLocation()
@@ -102,8 +99,6 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .build()
-
-        firebaseAuth = FirebaseAuth.getInstance()
 
         // Build a GoogleSignInClient with the options specified by gso.
         googleSignInClient = GoogleSignIn.getClient(this, gso)
@@ -139,8 +134,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private fun setWidgets() {
         centerButton = findViewById(R.id.center_button)
         centerButton.setOnClickListener { centerMap() }
-        signOutButton = findViewById(R.id.sign_out_button)
-        signOutButton.setOnClickListener { signOut() }
+        accountButton = findViewById(R.id.account_button)
+        accountButton.setOnClickListener { showAccount() }
         searchbar = findViewById(R.id.input_search)
         searchbar.setOnFocusChangeListener { _, hasFocus -> handleSearchbarFocus(hasFocus) }
         searchbar.addTextChangedListener { search() }
@@ -151,13 +146,13 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         autocompleteListView = findViewById(R.id.autocomplete_list)
         autocompleteListView.adapter = AutocompleteAdapter(this, autocompleteList)
         autocompleteListView.visibility = View.GONE
-        autocompleteListView.setOnItemClickListener { parent, view, position, id ->
-            onAutocompleteClick(parent, view, position, id)
+        autocompleteListView.setOnItemClickListener { _, _, position, _ ->
+            onAutocompleteClick(position)
         }
     }
 
     /**
-     * Creates the fusedLocationClient, checks the permissions and requests them if nessecary
+     * Creates the fusedLocationClient, checks the permissions and requests them if necessary
      * Than finds the last location (often the current location)
      */
     private fun initializeLocation() {
@@ -184,7 +179,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      * Moves map based on the given LatLng coordinates
      */
     private fun moveMap(latLng: LatLng) {
-        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+        mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, defaultZoom))
     }
 
     /**
@@ -193,7 +188,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private fun centerMap() {
         currentLocation()
         if (lastLocation.latitude == 0.0 && lastLocation.longitude == 0.0) {
-            moveMap(LatLng(52.373169, 4.890660))
+            moveMap(LatLng(defaultLatitude, defaultLongitude))
         } else {
             moveMap(lastLocation)
         }
@@ -221,19 +216,10 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     /**
-     * Signs out the user from firebase and googleSignIn and redirects the user to the login screen
-     */
-    private fun signOut() {
-        firebaseAuth.signOut()
-        googleSignInClient.signOut()
-        goToLoginScreen()
-    }
-
-    /**
      * Checks if there is a currently signed in user
      */
     private fun isSignedIn(): Boolean {
-        return GoogleSignIn.getLastSignedInAccount(this) != null
+        return GoogleSignIn.getLastSignedInAccount(this) != null || FirebaseAuth.getInstance().currentUser != null
     }
 
     /**
@@ -297,7 +283,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
      * Extracts the info from the autocomplete item and tries to find the corresponding location,
      * moves the map towards it and hides the keyboard and autocompleteList.
      */
-    private fun onAutocompleteClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+    private fun onAutocompleteClick(position: Int) {
         val placeId =
             (autocompleteListView.adapter.getItem(position) as AutocompleteItemData).placeId
         val placeRequest =
@@ -337,7 +323,28 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Clears the text in the searchbar
+     */
     private fun clearSearchbar() {
         searchbar.text.clear()
+    }
+
+    /**
+     * Starts the account activity
+     */
+    private fun showAccount() {
+        val intent = Intent(this, AccountActivity::class.java)
+        startActivity(intent)
+    }
+
+    /**
+     * Constants
+     */
+    companion object Constants {
+        private const val defaultZoom = 15f
+        private const val defaultLatitude = 52.373169
+        private const val defaultLongitude = 4.890660
+        private const val autocompleteListCounter = 4
     }
 }
