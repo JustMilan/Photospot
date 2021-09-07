@@ -20,6 +20,7 @@ import android.app.ActivityManager.RunningTaskInfo
 import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
+import com.google.firebase.perf.metrics.AddTrace
 
 
 class AccountActivity : AppCompatActivity(), Serializable {
@@ -65,6 +66,7 @@ class AccountActivity : AppCompatActivity(), Serializable {
     /**
      * Signs out the user from firebase and googleSignIn and redirects the user to the login screen
      */
+    @AddTrace(name = "signOut")
     private fun signOut() {
         FirebaseAuth.getInstance().signOut()
         AuthenticationHolder.signOut()

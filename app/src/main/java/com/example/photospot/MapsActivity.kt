@@ -38,6 +38,7 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.perf.metrics.AddTrace
 import java.io.Serializable
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
@@ -178,6 +179,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
     /**
      * Moves map based on the given LatLng coordinates
      */
+    @AddTrace(name = "moveMap")
     private fun moveMap(latLng: LatLng) {
         mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, defaultZoom))
     }
@@ -234,6 +236,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback, Serializable {
      * Performs a google places autocomplete api call with the contents of the edittext
      * Fills the recyclerview with the results afterwards
      */
+    @AddTrace(name = "autocomplete")
     private fun search() {
         val token = AutocompleteSessionToken.newInstance()
         val request = MapUtils.autocompleteRequestBuilder(token, searchbar.text.toString())
