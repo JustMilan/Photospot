@@ -19,6 +19,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.perf.metrics.AddTrace
 
 class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var firebaseAuth: FirebaseAuth
@@ -85,6 +86,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     /**
      * Start the MapsActivity if the sign in has been successful
      */
+    @AddTrace(name = "updateUI Login -> Maps")
     private fun updateUI() {
         if (FirebaseAuth.getInstance().currentUser != null)
             startActivity(Intent(this, MapsActivity::class.java))
