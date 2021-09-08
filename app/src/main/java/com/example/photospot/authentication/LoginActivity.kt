@@ -10,6 +10,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.photospot.MapsActivity
 import com.example.photospot.R
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -18,14 +21,15 @@ import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.perf.metrics.AddTrace
+
 
 class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var signInButton: SignInButton
     private lateinit var loadingProgressBar: RelativeLayout
+    private lateinit var loginBottomAdBanner: AdView
 
     private val resultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -72,6 +76,8 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         if (FirebaseAuth.getInstance().currentUser != null) updateUI()
         if (GoogleSignIn.getLastSignedInAccount(this) != null)
             firebaseAuthWithGoogle(GoogleSignIn.getLastSignedInAccount(this)!!)
+
+        initializeAds()
     }
 
     /**
@@ -112,6 +118,14 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                 loadingProgressBar.visibility = View.VISIBLE
                 updateUI()
             }
+    }
+
+    private fun initializeAds() {
+        MobileAds.initialize(this) {}
+
+        loginBottomAdBanner = findViewById(R.id.login_bottom_adview)
+        val adRequest = AdRequest.Builder().build()
+        loginBottomAdBanner.loadAd(adRequest)
     }
 
     /**
