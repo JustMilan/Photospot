@@ -87,6 +87,9 @@ dependencies {
     // Firebase Crashlytics
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    // Admob
+    implementation 'com.google.android.gms:play-services-ads:20.3.0'
 }
 
 repositories {
