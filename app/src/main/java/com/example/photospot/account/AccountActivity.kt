@@ -8,18 +8,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.example.photospot.MapsActivity
 import com.example.photospot.R
 import com.example.photospot.authentication.AuthenticationHolder
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.databinding.ActivityAccountBinding
 import com.google.firebase.auth.FirebaseAuth
 import java.io.Serializable
-import android.app.ActivityManager.RunningTaskInfo
 
-import android.app.ActivityManager
-import android.content.Context
-import android.util.Log
 import com.google.firebase.perf.metrics.AddTrace
 
 

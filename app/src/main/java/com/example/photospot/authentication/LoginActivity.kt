@@ -8,7 +8,7 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.example.photospot.MapsActivity
+import com.example.photospot.map.MapsActivity
 import com.example.photospot.R
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView

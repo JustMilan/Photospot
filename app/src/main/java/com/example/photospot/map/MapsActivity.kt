@@ -1,4 +1,4 @@
-package com.example.photospot
+package com.example.photospot.map
 
 import android.Manifest
 import android.content.Context
@@ -13,6 +13,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentActivity
+import com.example.photospot.R
 import com.example.photospot.account.AccountActivity
 import com.example.photospot.authentication.LoginActivity
 import com.example.photospot.autocomplete.AutocompleteAdapter
